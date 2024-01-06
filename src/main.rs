@@ -113,21 +113,45 @@ async fn search(
     let language = lang.unwrap_or_else(|| DEFAULT.to_string());
     let languages = app_state.languages.clone();
 
-    let lenient = true; // TODO
-    let size = limit.unwrap_or_else(|| 10);
+    let mut lenient = false;
+    let mut size = limit.unwrap_or_else(|| 10);
+    size = if size > 1 {
+        (size as f32 * 1.5).round() as i64
+    } else {
+        size
+    };
 
     let query = build_search_query(
-        q,
-        language.clone(),
-        languages,
-        lenient,
-        osm_tag,
-        envelope,
-        layer,
-        location_bias,
+        &q,
+        &language,
+        &languages,
+        &lenient,
+        &osm_tag,
+        &envelope,
+        &layer,
+        &location_bias,
     );
 
-    return send_photon_query(&app_state.client, query, size, &language).await;
+    let mut result = send_photon_query(&app_state.client, query, size, &language).await?;
+
+    result = if result.features.is_empty() {
+        lenient = true;
+        let query = build_search_query(
+            &q,
+            &language,
+            &languages,
+            &lenient,
+            &osm_tag,
+            &envelope,
+            &layer,
+            &location_bias,
+        );
+        send_photon_query(&app_state.client, query, size, &language).await?
+    } else {
+        result
+    };
+
+    return Ok(axum::Json::from(result));
 }
 
 #[debug_handler]
@@ -155,16 +179,18 @@ async fn reverse(
     let size = limit.unwrap_or_else(|| 10);
 
     let query = build_reverse_query(
-        lat,
-        lon,
-        radius,
-        query_string_filter,
-        distance_sort.unwrap_or_default(),
-        layer,
-        osm_tag,
+        &lat,
+        &lon,
+        &radius,
+        &query_string_filter,
+        &distance_sort.unwrap_or_default(),
+        &layer,
+        &osm_tag,
     );
 
-    return send_photon_query(&app_state.client, query, size, &language).await;
+    let result = send_photon_query(&app_state.client, query, size, &language).await?;
+
+    return Ok(axum::Json::from(result));
 }
 
 #[debug_handler]

@@ -1,7 +1,7 @@
 pub struct AddressType {
     pub name: &'static str,
-    pub min_rank: i32,
-    pub max_rank: i32,
+    pub min_rank: i64,
+    pub max_rank: i64,
 }
 
 const HOUSE: AddressType = AddressType {
@@ -51,7 +51,7 @@ pub fn address_types() -> Vec<AddressType> {
     ];
 }
 
-pub fn from_rank(rank: i32) -> Option<AddressType> {
+pub fn from_rank(rank: i64) -> Option<AddressType> {
     let address_types = address_types();
     for a in address_types {
         if rank >= a.min_rank && rank <= a.max_rank {

@@ -11,12 +11,12 @@ pub struct Point {
 pub struct LocationBias {
     pub point: Point,
     pub scale: f64,
-    pub zoom: i32,
+    pub zoom: i64,
 }
 
 pub fn add_location_bias(
     query: FunctionScoreQuery,
-    bias: Option<LocationBias>,
+    bias: &Option<LocationBias>,
 ) -> FunctionScoreQuery {
     if let Some(bias) = bias {
         if bias.zoom < 4 {
@@ -28,9 +28,9 @@ pub fn add_location_bias(
     return query;
 }
 
-fn build_location_bias_query(bias: LocationBias) -> FunctionScoreQuery {
+fn build_location_bias_query(bias: &LocationBias) -> FunctionScoreQuery {
     const MIN_SCALE: f64 = 0.0000001;
-    const MAX_ZOOM: i32 = 18;
+    const MAX_ZOOM: i64 = 18;
 
     let radius = ((1 << (18 - std::cmp::min(bias.zoom, MAX_ZOOM))) / 4) as u64;
 

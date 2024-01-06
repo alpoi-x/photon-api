@@ -1,7 +1,7 @@
 use elasticsearch_dsl::{BoolQuery, Query};
 use std::collections::HashSet;
 
-pub fn add_osm_tag_filter(filters: Option<HashSet<String>>, query: BoolQuery) -> BoolQuery {
+pub fn add_osm_tag_filter(filters: &Option<HashSet<String>>, query: BoolQuery) -> BoolQuery {
     if let Some(filters) = filters {
         let osm_tag_query = build_osm_tag_filter_query(filters);
         if let Some(osm_tag_query) = osm_tag_query {
@@ -12,7 +12,7 @@ pub fn add_osm_tag_filter(filters: Option<HashSet<String>>, query: BoolQuery) ->
     return query;
 }
 
-fn build_osm_tag_filter_query(filter_strings: HashSet<String>) -> Option<BoolQuery> {
+fn build_osm_tag_filter_query(filter_strings: &HashSet<String>) -> Option<BoolQuery> {
     let filters: Vec<OsmTagFilter> = filter_strings
         .iter()
         .filter(|&filter| {

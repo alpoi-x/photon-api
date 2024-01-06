@@ -10,7 +10,7 @@ pub struct PhotonSearchRequest {
     pub limit: Option<i64>,
     pub location_bias_scale: Option<f64>,
     pub bbox: Option<[f32; 4]>,
-    pub zoom: Option<i32>,
+    pub zoom: Option<i64>,
     pub osm_tag: Option<HashSet<String>>,
     pub layer: Option<HashSet<String>>,
     pub debug: Option<bool>,

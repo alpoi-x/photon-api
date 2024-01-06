@@ -13,7 +13,7 @@ pub async fn send_photon_query(
     query: Search,
     size: i64,
     language: &String,
-) -> Result<axum::Json<PhotonResponse>, PhotonError> {
+) -> Result<PhotonResponse, PhotonError> {
     let response: ElasticsearchResponse = client
         .search(SearchParts::Index(&[PHOTON_INDEX]))
         .search_type(SearchType::QueryThenFetch)
@@ -37,7 +37,7 @@ pub async fn send_photon_query(
         features,
     };
 
-    return Ok(axum::Json::from(photon_response));
+    return Ok(photon_response);
 }
 
 pub async fn send_lookup(

@@ -107,7 +107,7 @@ pub fn validate_location_bias(
     lon: Option<f32>,
     lat: Option<f32>,
     scale: Option<f64>,
-    zoom: Option<i32>,
+    zoom: Option<i64>,
 ) -> Result<Option<LocationBias>, ValidationError> {
     return match (lon, lat, scale, zoom) {
         (Some(lon), Some(lat), Some(scale), Some(zoom)) => Ok(Some(LocationBias {

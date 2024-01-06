@@ -7,7 +7,7 @@ pub struct Envelope {
     pub max_lat: f32,
 }
 
-pub fn add_bounding_box_filter(bbox: Option<Envelope>, query: BoolQuery) -> BoolQuery {
+pub fn add_bounding_box_filter(bbox: &Option<Envelope>, query: BoolQuery) -> BoolQuery {
     if let Some(envelope) = bbox {
         let bbox_query = build_bbox_query(envelope);
         return query.filter(bbox_query);
@@ -15,7 +15,7 @@ pub fn add_bounding_box_filter(bbox: Option<Envelope>, query: BoolQuery) -> Bool
     return query;
 }
 
-fn build_bbox_query(bbox: Envelope) -> GeoBoundingBoxQuery {
+fn build_bbox_query(bbox: &Envelope) -> GeoBoundingBoxQuery {
     return Query::geo_bounding_box(
         "coordinate",
         GeoBoundingBox::Vertices {

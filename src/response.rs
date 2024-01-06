@@ -15,10 +15,10 @@ pub struct PhotonResponseFeature {
 
 #[derive(Debug, Serialize)]
 pub struct PhotonResponseProperties {
-    pub parent_place_id: Option<i32>,
-    pub place_id: i32,
+    pub parent_place_id: Option<i64>,
+    pub place_id: i64,
     pub osm_type: String,
-    pub osm_id: i32,
+    pub osm_id: i64,
     pub osm_key: String,
     pub osm_value: String,
     pub r#type: String,
@@ -33,7 +33,7 @@ pub struct PhotonResponseProperties {
     pub street: Option<String>,
     pub state: Option<String>,
     pub county: Option<String>,
-    pub extent: Option<[f64; 4]>,
+    pub extent: Option<[f32; 4]>,
     pub extra: Option<HashMap<String, String>>,
     pub names: Option<HashMap<String, String>>,
     pub geometry: PhotonGeometry,
@@ -42,5 +42,5 @@ pub struct PhotonResponseProperties {
 #[derive(Debug, Serialize)]
 pub struct PhotonGeometry {
     pub r#type: String,
-    pub coordinates: [f64; 2],
+    pub coordinates: [f32; 2],
 }

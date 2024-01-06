@@ -8,9 +8,9 @@ type LanguageField = HashMap<String, String>;
 pub struct PhotonDocument {
     pub r#type: String,
     pub importance: f64,
-    pub place_id: i32,
-    pub parent_place_id: Option<i32>,
-    pub osm_id: i32,
+    pub place_id: i64,
+    pub parent_place_id: Option<i64>,
+    pub osm_id: i64,
     pub osm_type: String,
     pub osm_value: String,
     pub osm_key: String,
@@ -35,13 +35,13 @@ pub struct PhotonDocument {
 #[derive(Debug, Deserialize)]
 pub struct PhotonDocumentExtent {
     pub r#type: String,
-    pub coordinates: [[f64; 2]; 2],
+    pub coordinates: [[f32; 2]; 2],
 }
 
 #[derive(Debug, Deserialize)]
 pub struct PhotonDocumentCoordinate {
-    pub lat: f64,
-    pub lon: f64,
+    pub lat: f32,
+    pub lon: f32,
 }
 
 #[derive(Debug, Deserialize)]

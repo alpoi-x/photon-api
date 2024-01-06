@@ -12,14 +12,14 @@ use crate::query::name_ngram::build_name_ngram_query;
 use crate::query::osm_tag::add_osm_tag_filter;
 
 pub fn build_search_query(
-    q: String,
-    language: String,
-    languages: Vec<String>,
-    lenient: bool,
-    filters: Option<HashSet<String>>,
-    bbox: Option<Envelope>,
-    layers: Option<HashSet<String>>,
-    location_bias: Option<LocationBias>,
+    q: &String,
+    language: &String,
+    languages: &Vec<String>,
+    lenient: &bool,
+    filters: &Option<HashSet<String>>,
+    bbox: &Option<Envelope>,
+    layers: &Option<HashSet<String>>,
+    location_bias: &Option<LocationBias>,
 ) -> Search {
     let mut unfiltered = build_unfiltered_query(&q, &language, &languages, &lenient);
     unfiltered = add_location_bias(unfiltered, location_bias);
