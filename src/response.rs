@@ -1,16 +1,16 @@
-use std::collections::HashMap;
 use serde::Serialize;
+use std::collections::HashMap;
 
 #[derive(Debug, Serialize)]
 pub struct PhotonResponse {
     pub r#type: String,
-    pub features: Vec<PhotonResponseFeature>
+    pub features: Vec<PhotonResponseFeature>,
 }
 
 #[derive(Debug, Serialize)]
 pub struct PhotonResponseFeature {
     pub r#type: String,
-    pub properties: PhotonResponseProperties
+    pub properties: PhotonResponseProperties,
 }
 
 #[derive(Debug, Serialize)]
@@ -36,11 +36,11 @@ pub struct PhotonResponseProperties {
     pub extent: Option<[f64; 4]>,
     pub extra: Option<HashMap<String, String>>,
     pub names: Option<HashMap<String, String>>,
-    pub geometry: PhotonGeometry
+    pub geometry: PhotonGeometry,
 }
 
 #[derive(Debug, Serialize)]
 pub struct PhotonGeometry {
     pub r#type: String,
-    pub coordinates: [f64; 2]
+    pub coordinates: [f64; 2],
 }

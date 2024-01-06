@@ -8,7 +8,7 @@ pub struct ApiConfig {
 
 #[derive(Clone)]
 pub struct LanguageConfig {
-    pub valid_languages: Vec<String>
+    pub valid_languages: Vec<String>,
 }
 
 pub fn load_api_config() -> ApiConfig {

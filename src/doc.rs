@@ -1,6 +1,6 @@
-use std::collections::HashMap;
-use serde::Deserialize;
 use crate::response::{PhotonGeometry, PhotonResponseFeature, PhotonResponseProperties};
+use serde::Deserialize;
+use std::collections::HashMap;
 
 type LanguageField = HashMap<String, String>;
 
@@ -29,34 +29,34 @@ pub struct PhotonDocument {
     pub street: Option<LanguageField>,
     pub name: Option<LanguageField>,
     pub names: Option<HashMap<String, String>>,
-    pub extra: Option<HashMap<String, String>>
+    pub extra: Option<HashMap<String, String>>,
 }
 
 #[derive(Debug, Deserialize)]
 pub struct PhotonDocumentExtent {
     pub r#type: String,
-    pub coordinates: [[f64; 2]; 2]
+    pub coordinates: [[f64; 2]; 2],
 }
 
 #[derive(Debug, Deserialize)]
 pub struct PhotonDocumentCoordinate {
     pub lat: f64,
-    pub lon: f64
+    pub lon: f64,
 }
 
 #[derive(Debug, Deserialize)]
 pub struct ElasticsearchResponse {
-    pub hits: ElasticsearchHits
+    pub hits: ElasticsearchHits,
 }
 
 #[derive(Debug, Deserialize)]
 pub struct ElasticsearchHits {
-    pub hits: Vec<ElasticsearchHit>
+    pub hits: Vec<ElasticsearchHit>,
 }
 
 #[derive(Debug, Deserialize)]
 pub struct ElasticsearchHit {
-    pub _source: Option<PhotonDocument>
+    pub _source: Option<PhotonDocument>,
 }
 
 pub fn document_to_feature(doc: &PhotonDocument, language: &String) -> PhotonResponseFeature {
@@ -88,16 +88,16 @@ pub fn document_to_feature(doc: &PhotonDocument, language: &String) -> PhotonRes
                     extent.coordinates[0][0],
                     extent.coordinates[0][1],
                     extent.coordinates[1][0],
-                    extent.coordinates[1][1]
+                    extent.coordinates[1][1],
                 ]),
-                None => None
+                None => None,
             },
             geometry: PhotonGeometry {
                 r#type: "Point".to_string(),
-                coordinates: [doc.coordinate.lon, doc.coordinate.lat]
-            }
-        }
-    }
+                coordinates: [doc.coordinate.lon, doc.coordinate.lat],
+            },
+        },
+    };
 }
 
 fn unwrap_language_field(field: &Option<LanguageField>, language: &String) -> Option<String> {
@@ -106,9 +106,9 @@ fn unwrap_language_field(field: &Option<LanguageField>, language: &String) -> Op
             Some(value) => Some(value.clone()),
             None => match field.get("default") {
                 Some(value) => Some(value.clone()),
-                None => None
-            }
+                None => None,
+            },
         },
-        None => None
+        None => None,
     };
 }

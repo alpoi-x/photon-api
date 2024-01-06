@@ -1,7 +1,7 @@
-use std::collections::HashSet;
-use elasticsearch_dsl::{Distance, GeoDistanceSort, GeoLocation, Query, Search, SortOrder};
 use crate::query::layer::build_layer_filter_query;
 use crate::query::osm_tag::add_osm_tag_filter;
+use elasticsearch_dsl::{Distance, GeoDistanceSort, GeoLocation, Query, Search, SortOrder};
+use std::collections::HashSet;
 
 pub fn build_reverse_query(
     lat: f32,
@@ -10,12 +10,12 @@ pub fn build_reverse_query(
     query_string_filter: Option<String>,
     distance_sort: bool,
     layers: Option<HashSet<String>>,
-    filters: Option<HashSet<String>>
+    filters: Option<HashSet<String>>,
 ) -> Search {
     let geo_distance_query = Query::geo_distance(
         "coordinate",
         GeoLocation::new(lat, lon),
-        Distance::Kilometers(radius)
+        Distance::Kilometers(radius),
     );
 
     let mut query = Query::bool();
@@ -47,11 +47,10 @@ pub fn build_reverse_query(
 
     query = query.filter(geo_distance_query);
 
-    let mut search =  Search::new().query(query);
+    let mut search = Search::new().query(query);
     search = if distance_sort {
         search.sort(
-            GeoDistanceSort::new("coordinate", GeoLocation::new(lat, lon))
-                .order(SortOrder::Asc)
+            GeoDistanceSort::new("coordinate", GeoLocation::new(lat, lon)).order(SortOrder::Asc),
         )
     } else {
         search

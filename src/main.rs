@@ -1,12 +1,12 @@
 mod address_type;
 mod config;
+mod doc;
 mod elastic;
 mod errors;
 mod query;
 mod request;
-mod validation;
 mod response;
-mod doc;
+mod validation;
 
 use crate::config::{load_api_config, load_language_config};
 use crate::errors::PhotonError;
@@ -16,10 +16,10 @@ use crate::validation::{
     validate_reverse_request_parameters, validate_search_request_parameters,
 };
 use axum::extract::State;
-use axum::{Router, routing::get};
+use axum::{routing::get, Router};
 use axum_extra::extract::Query;
 use axum_macros::debug_handler;
-use elasticsearch::http::headers::{AUTHORIZATION, HeaderValue};
+use elasticsearch::http::headers::{HeaderValue, AUTHORIZATION};
 use elasticsearch::http::transport::{CloudConnectionPool, TransportBuilder};
 use elasticsearch::Elasticsearch;
 use query::build_search_query;
@@ -81,14 +81,7 @@ fn create_elasticsearch_client(
 
 #[debug_handler]
 async fn health(State(app_state): State<AppState>) -> Result<String, PhotonError> {
-    let response = app_state
-        .client
-        .cat()
-        .health()
-        .send()
-        .await?
-        .text()
-        .await?;
+    let response = app_state.client.cat().health().send().await?.text().await?;
 
     Ok(response)
 }
@@ -131,7 +124,7 @@ async fn search(
         osm_tag,
         envelope,
         layer,
-        location_bias
+        location_bias,
     );
 
     return send_photon_query(&app_state.client, query, size, &language).await;
@@ -155,7 +148,7 @@ async fn reverse(
         limit,
         osm_tag,
         layer,
-        debug: _ // TODO
+        debug: _, // TODO
     } = params;
 
     let language = lang.unwrap_or_else(|| DEFAULT.to_string());
@@ -168,7 +161,7 @@ async fn reverse(
         query_string_filter,
         distance_sort.unwrap_or_default(),
         layer,
-        osm_tag
+        osm_tag,
     );
 
     return send_photon_query(&app_state.client, query, size, &language).await;

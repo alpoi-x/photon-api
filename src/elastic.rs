@@ -12,7 +12,7 @@ pub async fn send_photon_query(
     client: &Elasticsearch,
     query: Search,
     size: i64,
-    language: &String
+    language: &String,
 ) -> Result<axum::Json<PhotonResponse>, PhotonError> {
     let response: ElasticsearchResponse = client
         .search(SearchParts::Index(&[PHOTON_INDEX]))
@@ -34,7 +34,7 @@ pub async fn send_photon_query(
 
     let photon_response = PhotonResponse {
         r#type: "FeatureCollection".to_string(),
-        features
+        features,
     };
 
     return Ok(axum::Json::from(photon_response));
@@ -43,7 +43,7 @@ pub async fn send_photon_query(
 pub async fn send_lookup(
     client: &Elasticsearch,
     place_id: &String,
-    language: &String
+    language: &String,
 ) -> Result<axum::Json<PhotonResponse>, PhotonError> {
     let response: ElasticsearchHit = client
         .get(GetParts::IndexId(PHOTON_INDEX, place_id))
@@ -56,8 +56,8 @@ pub async fn send_lookup(
         r#type: "FeatureCollection".to_string(),
         features: match response._source {
             Some(source) => vec![document_to_feature(&source, &language)],
-            None => vec![]
-        }
+            None => vec![],
+        },
     };
 
     return Ok(axum::Json::from(photon_response));

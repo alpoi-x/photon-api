@@ -33,5 +33,5 @@ pub struct PhotonReverseRequest {
 #[derive(Debug, Deserialize)]
 pub struct PhotonLookupRequest {
     pub place_id: String,
-    pub lang: Option<String>
+    pub lang: Option<String>,
 }

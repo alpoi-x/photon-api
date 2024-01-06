@@ -19,7 +19,7 @@ pub fn build_search_query(
     filters: Option<HashSet<String>>,
     bbox: Option<Envelope>,
     layers: Option<HashSet<String>>,
-    location_bias: Option<LocationBias>
+    location_bias: Option<LocationBias>,
 ) -> Search {
     let mut unfiltered = build_unfiltered_query(&q, &language, &languages, &lenient);
     unfiltered = add_location_bias(unfiltered, location_bias);
