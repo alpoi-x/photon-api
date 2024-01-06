@@ -9,6 +9,6 @@ pub fn add_layer_filter(layers: Option<HashSet<String>>, query: BoolQuery) -> Bo
     return query;
 }
 
-fn build_layer_filter_query(filters: HashSet<String>) -> TermsQuery {
+pub fn build_layer_filter_query(filters: HashSet<String>) -> TermsQuery {
     return Query::terms("type", filters);
 }

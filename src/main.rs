@@ -1,13 +1,14 @@
 mod address_type;
 mod config;
+mod elastic;
 mod errors;
-mod osm_tag;
 mod query;
 mod request;
-mod structs;
 mod validation;
+mod response;
+mod doc;
 
-use crate::config::{load_api_config, load_language_config, LanguageConfig};
+use crate::config::{load_api_config, load_language_config};
 use crate::errors::PhotonError;
 use crate::request::{PhotonLookupRequest, PhotonReverseRequest, PhotonSearchRequest};
 use crate::validation::{
@@ -15,21 +16,24 @@ use crate::validation::{
     validate_reverse_request_parameters, validate_search_request_parameters,
 };
 use axum::extract::State;
-use axum::{routing::get, Router};
+use axum::{Router, routing::get};
 use axum_extra::extract::Query;
 use axum_macros::debug_handler;
-use elasticsearch::http::headers::{HeaderValue, AUTHORIZATION};
+use elasticsearch::http::headers::{AUTHORIZATION, HeaderValue};
 use elasticsearch::http::transport::{CloudConnectionPool, TransportBuilder};
-use elasticsearch::{Elasticsearch, GetParts, SearchParts};
+use elasticsearch::Elasticsearch;
 use query::build_search_query;
-use serde::{Deserialize, Deserializer};
 
-const PHOTON_INDEX: &'static str = "photon";
+use crate::elastic::{send_lookup, send_photon_query};
+use crate::query::build_reverse_query;
+use crate::response::PhotonResponse;
+
+const DEFAULT: &'static str = "default";
 
 #[derive(Clone)]
 struct AppState {
     client: Elasticsearch,
-    languages: LanguageConfig,
+    languages: Vec<String>,
 }
 
 #[tokio::main]
@@ -76,19 +80,26 @@ fn create_elasticsearch_client(
 }
 
 #[debug_handler]
-async fn health(State(app_state): State<AppState>) -> Result<(), PhotonError> {
-    app_state.client.cat().health().pretty(true).send().await?;
+async fn health(State(app_state): State<AppState>) -> Result<String, PhotonError> {
+    let response = app_state
+        .client
+        .cat()
+        .health()
+        .send()
+        .await?
+        .text()
+        .await?;
 
-    Ok(())
+    Ok(response)
 }
 
 #[debug_handler]
 async fn search(
     State(app_state): State<AppState>,
     Query(params): Query<PhotonSearchRequest>,
-) -> Result<String, PhotonError> {
+) -> Result<axum::Json<PhotonResponse>, PhotonError> {
     validate_search_request_parameters(&params)?;
-    validate_lang_parameter(&params.lang, &app_state.languages.valid_languages)?;
+    validate_lang_parameter(&params.lang, &app_state.languages)?;
 
     let PhotonSearchRequest {
         q,
@@ -101,80 +112,78 @@ async fn search(
         zoom,
         osm_tag,
         layer,
-        debug,
+        debug: _, // TODO
     } = params;
 
     let location_bias = validate_location_bias(lon, lat, location_bias_scale, zoom)?;
     let envelope = validate_bbox(&bbox)?;
-    let language = lang.unwrap_or_else(|| app_state.languages.default_language.clone());
-    let languages = app_state.languages.valid_languages.clone();
+    let language = lang.unwrap_or_else(|| DEFAULT.to_string());
+    let languages = app_state.languages.clone();
 
     let lenient = true; // TODO
     let size = limit.unwrap_or_else(|| 10);
 
     let query = build_search_query(
         q,
-        language,
+        language.clone(),
         languages,
         lenient,
         osm_tag,
         envelope,
         layer,
-        location_bias,
-        size,
+        location_bias
     );
 
-    println!("{:#?}", serde_json::to_string(&query));
-
-    let response = app_state
-        .client
-        .search(SearchParts::Index(&[PHOTON_INDEX]))
-        .body(query)
-        .send()
-        .await?
-        .text()
-        .await?;
-
-    // TODO make the response into the photon doc format
-
-    return Ok(response);
+    return send_photon_query(&app_state.client, query, size, &language).await;
 }
 
 #[debug_handler]
 async fn reverse(
     State(app_state): State<AppState>,
     Query(params): Query<PhotonReverseRequest>,
-) -> Result<(), PhotonError> {
+) -> Result<axum::Json<PhotonResponse>, PhotonError> {
     validate_reverse_request_parameters(&params)?;
-    validate_lang_parameter(&params.lang, &app_state.languages.valid_languages)?;
+    validate_lang_parameter(&params.lang, &app_state.languages)?;
 
-    let language = params
-        .lang
-        .unwrap_or_else(|| app_state.languages.default_language.clone());
+    let PhotonReverseRequest {
+        lang,
+        lon,
+        lat,
+        radius,
+        query_string_filter,
+        distance_sort,
+        limit,
+        osm_tag,
+        layer,
+        debug: _ // TODO
+    } = params;
 
-    todo!();
+    let language = lang.unwrap_or_else(|| DEFAULT.to_string());
+    let size = limit.unwrap_or_else(|| 10);
 
-    Ok(())
+    let query = build_reverse_query(
+        lat,
+        lon,
+        radius,
+        query_string_filter,
+        distance_sort.unwrap_or_default(),
+        layer,
+        osm_tag
+    );
+
+    return send_photon_query(&app_state.client, query, size, &language).await;
 }
 
 #[debug_handler]
 async fn lookup(
     State(app_state): State<AppState>,
     Query(params): Query<PhotonLookupRequest>,
-) -> Result<String, PhotonError> {
-    validate_lang_parameter(&params.lang, &app_state.languages.valid_languages)?;
+) -> Result<axum::Json<PhotonResponse>, PhotonError> {
+    validate_lang_parameter(&params.lang, &app_state.languages)?;
 
-    let language = params
-        .lang
-        .unwrap_or_else(|| app_state.languages.default_language.clone()); // TODO
+    let PhotonLookupRequest { place_id, lang } = params;
 
-    let response = app_state
-        .client
-        .get(GetParts::IndexId(PHOTON_INDEX, &params.place_id))
-        .send()
-        .await?
-        .text()
-        .await?;
+    let language = lang.unwrap_or_else(|| DEFAULT.to_string());
 
-    Ok(response)
+    return send_lookup(&app_state.client, &place_id, &language).await;
 }

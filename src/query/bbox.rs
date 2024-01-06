@@ -1,6 +1,6 @@
 use elasticsearch_dsl::{BoolQuery, GeoBoundingBox, GeoBoundingBoxQuery, Query};
 
-pub(crate) struct Envelope {
+pub struct Envelope {
     pub min_lon: f32,
     pub min_lat: f32,
     pub max_lon: f32,

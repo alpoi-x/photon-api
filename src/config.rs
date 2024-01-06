@@ -1,18 +1,17 @@
 #[derive(Clone)]
-pub(crate) struct ApiConfig {
-    pub(crate) host_address: String,
-    pub(crate) host_port: String,
-    pub(crate) elastic_api_key: String,
-    pub(crate) elastic_cloud_id: String,
+pub struct ApiConfig {
+    pub host_address: String,
+    pub host_port: String,
+    pub elastic_api_key: String,
+    pub elastic_cloud_id: String,
 }
 
 #[derive(Clone)]
-pub(crate) struct LanguageConfig {
-    pub(crate) valid_languages: Vec<String>,
-    pub(crate) default_language: String,
+pub struct LanguageConfig {
+    pub valid_languages: Vec<String>
 }
 
-pub(crate) fn load_api_config() -> ApiConfig {
+pub fn load_api_config() -> ApiConfig {
     let host_address = match std::env::var("HOST_ADDRESS") {
         Ok(address) => address,
         _ => "127.0.0.1".into(),
@@ -41,7 +40,7 @@ pub(crate) fn load_api_config() -> ApiConfig {
     };
 }
 
-pub(crate) fn load_language_config() -> LanguageConfig {
+pub fn load_language_config() -> Vec<String> {
     let all_valid_languages = vec!["en".into(), "de".into(), "fr".into(), "it".into()];
 
     let valid_languages = match std::env::var("VALID_LANGUAGES") {
@@ -58,20 +57,5 @@ pub(crate) fn load_language_config() -> LanguageConfig {
         }
     }
 
-    let default_language = match std::env::var("DEFAULT_LANGUAGE") {
-        Ok(language) => language,
-        _ => "en".into(),
-    };
-
-    if !valid_languages.contains(&default_language) {
-        panic!(
-            "Invalid language specified as DEFAULT_LANGUAGE: \"{}\". Allowed languages are {:?}",
-            default_language, valid_languages
-        );
-    }
-
-    return LanguageConfig {
-        valid_languages,
-        default_language,
-    };
+    return valid_languages;
 }

@@ -1,7 +1,7 @@
 pub struct AddressType {
-    pub(crate) name: &'static str,
-    pub(crate) min_rank: i32,
-    pub(crate) max_rank: i32,
+    pub name: &'static str,
+    pub min_rank: i32,
+    pub max_rank: i32,
 }
 
 const HOUSE: AddressType = AddressType {

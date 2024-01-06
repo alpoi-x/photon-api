@@ -98,7 +98,7 @@ fn build_osm_tag_filter_query(filter_strings: HashSet<String>) -> Option<BoolQue
 }
 
 #[derive(PartialEq)]
-pub(crate) enum OsmTagFilterType {
+pub enum OsmTagFilterType {
     Include,
     Exclude,
     ExcludeValue,
@@ -106,10 +106,10 @@ pub(crate) enum OsmTagFilterType {
 }
 
 #[derive(PartialEq)]
-pub(crate) struct OsmTagFilter {
-    pub(crate) filter_type: OsmTagFilterType,
-    pub(crate) key: Option<String>,
-    pub(crate) value: Option<String>,
+pub struct OsmTagFilter {
+    pub filter_type: OsmTagFilterType,
+    pub key: Option<String>,
+    pub value: Option<String>,
 }
 
 impl From<String> for OsmTagFilter {

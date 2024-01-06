@@ -5,7 +5,7 @@ use crate::errors::ValidationError;
 use crate::query::{Envelope, LocationBias, Point};
 use crate::request::{PhotonReverseRequest, PhotonSearchRequest};
 
-pub(crate) fn validate_search_request_parameters(
+pub fn validate_search_request_parameters(
     request: &PhotonSearchRequest,
 ) -> Result<(), ValidationError> {
     if let Some(lon) = &request.lon {
@@ -21,15 +21,12 @@ pub(crate) fn validate_search_request_parameters(
     return Ok(());
 }
 
-pub(crate) fn validate_reverse_request_parameters(
+pub fn validate_reverse_request_parameters(
     request: &PhotonReverseRequest,
 ) -> Result<(), ValidationError> {
-    if let Some(lon) = &request.lon {
-        validate_lon(lon)?
-    }
-    if let Some(lat) = &request.lat {
-        validate_lat(lat)?
-    }
+    validate_lon(&request.lon)?;
+    validate_lat(&request.lat)?;
+
     if let Some(layers) = &request.layer {
         validate_layers(layers)?
     }
@@ -37,7 +34,7 @@ pub(crate) fn validate_reverse_request_parameters(
     return Ok(());
 }
 
-pub(crate) fn validate_lang_parameter(
+pub fn validate_lang_parameter(
     language: &Option<String>,
     valid: &Vec<String>,
 ) -> Result<(), ValidationError> {
@@ -67,7 +64,7 @@ fn validate_lat(lat: &f32) -> Result<(), ValidationError> {
     return Ok(());
 }
 
-pub(crate) fn validate_bbox(bbox: &Option<[f32; 4]>) -> Result<Option<Envelope>, ValidationError> {
+pub fn validate_bbox(bbox: &Option<[f32; 4]>) -> Result<Option<Envelope>, ValidationError> {
     if let Some(bbox) = bbox {
         if bbox[0] > 180.0
             || bbox[0] < -180.0
@@ -106,7 +103,7 @@ fn validate_layers(layers: &HashSet<String>) -> Result<(), ValidationError> {
     return Ok(());
 }
 
-pub(crate) fn validate_location_bias(
+pub fn validate_location_bias(
     lon: Option<f32>,
     lat: Option<f32>,
     scale: Option<f64>,

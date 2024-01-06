@@ -19,8 +19,7 @@ pub fn build_search_query(
     filters: Option<HashSet<String>>,
     bbox: Option<Envelope>,
     layers: Option<HashSet<String>>,
-    location_bias: Option<LocationBias>,
-    limit: i64,
+    location_bias: Option<LocationBias>
 ) -> Search {
     let mut unfiltered = build_unfiltered_query(&q, &language, &languages, &lenient);
     unfiltered = add_location_bias(unfiltered, location_bias);
@@ -33,7 +32,7 @@ pub fn build_search_query(
     final_query = add_osm_tag_filter(filters, final_query);
     final_query = final_query.filter(top_level_filter);
 
-    return Search::new().size(limit as u64).query(final_query);
+    return Search::new().query(final_query);
 }
 
 fn build_unfiltered_query(
