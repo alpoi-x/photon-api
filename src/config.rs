@@ -14,7 +14,7 @@ pub struct LanguageConfig {
 pub fn load_api_config() -> ApiConfig {
     let host_address = match std::env::var("HOST_ADDRESS") {
         Ok(address) => address,
-        _ => "127.0.0.1".into(),
+        _ => "0.0.0.0".into(),
     };
 
     let host_port = match std::env::var("HOST_PORT") {

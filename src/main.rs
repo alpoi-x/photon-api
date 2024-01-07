@@ -43,6 +43,10 @@ async fn main() {
 
     let client =
         create_elasticsearch_client(&config.elastic_cloud_id, &config.elastic_api_key).unwrap();
+
+    let health_res = client.cat().health().send().await.unwrap().text().await.unwrap();
+    println!("{}", health_res);
+
     let app_state = AppState { client, languages };
 
     let router = Router::new()
@@ -56,6 +60,8 @@ async fn main() {
         tokio::net::TcpListener::bind(format!("{}:{}", config.host_address, config.host_port))
             .await
             .unwrap();
+
+    println!("Ready to receive requests!");
 
     axum::serve(listener, router).await.unwrap();
 }
@@ -108,7 +114,7 @@ async fn search(
         debug: _, // TODO
     } = params;
 
-    let location_bias = validate_location_bias(lon, lat, location_bias_scale, zoom)?;
+    let location_bias = validate_location_bias(&lon, &lat, &location_bias_scale, &zoom)?;
     let envelope = validate_bbox(&bbox)?;
     let language = lang.unwrap_or_else(|| DEFAULT.to_string());
     let languages = app_state.languages.clone();
@@ -183,7 +189,7 @@ async fn reverse(
         &lon,
         &radius,
         &query_string_filter,
-        &distance_sort.unwrap_or_default(),
+        &distance_sort.unwrap_or_else(|| true),
         &layer,
         &osm_tag,
     );
