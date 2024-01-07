@@ -54,7 +54,7 @@ impl fmt::Display for ValidationError {
             ValidationError::Bbox(value) => write!(f, "invalid bbox \"{value:?}\". Expected \"min_lon,min_lat,max_lon,max_lat\" where \"lat\" is in range [-90, 90] and \"lon\" is in range [-180, 180]"),
             ValidationError::Layer{value, valid} => write!(f, "invalid layer \"{value:?}\". Allowed layers are {valid:?}"),
             ValidationError::Lang{value, valid} => write!(f, "invalid language \"{value:?}\". Allowed languages are {valid:?}"),
-            ValidationError::LocationBias => write!(f, "must use all or none of lon, lat, scale, zoom")
+            ValidationError::LocationBias => write!(f, "must use both or neither of lon, lat")
         };
     }
 }

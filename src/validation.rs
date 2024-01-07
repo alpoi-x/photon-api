@@ -104,18 +104,38 @@ fn validate_layers(layers: &HashSet<String>) -> Result<(), ValidationError> {
 }
 
 pub fn validate_location_bias(
-    lon: Option<f32>,
-    lat: Option<f32>,
-    scale: Option<f64>,
-    zoom: Option<i64>,
+    lon: &Option<f32>,
+    lat: &Option<f32>,
+    scale: &Option<f64>,
+    zoom: &Option<i64>,
 ) -> Result<Option<LocationBias>, ValidationError> {
-    return match (lon, lat, scale, zoom) {
-        (Some(lon), Some(lat), Some(scale), Some(zoom)) => Ok(Some(LocationBias {
-            point: Point { x: lon, y: lat },
-            scale,
-            zoom,
+    let unwrapped_scale = if let Some(scale) = scale {
+        if scale > &1.0 {
+            1.0
+        } else {
+            *scale
+        }
+    } else {
+        0.2
+    };
+
+    let unwrapped_zoom = if let Some(zoom) = zoom {
+        if zoom > &18 {
+            18
+        } else {
+            *zoom
+        }
+    } else {
+        14
+    };
+
+    return match (lon, lat) {
+        (Some(lon), Some(lat)) => Ok(Some(LocationBias {
+            point: Point { x: *lon, y: *lat },
+            scale: unwrapped_scale,
+            zoom: unwrapped_zoom,
         })),
-        (None, None, None, None) => Ok(None),
+        (None, None) => Ok(None),
         _ => Err(ValidationError::LocationBias),
     };
 }
