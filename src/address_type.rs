@@ -51,6 +51,7 @@ pub fn address_types() -> Vec<AddressType> {
     ];
 }
 
+#[allow(dead_code)]
 pub fn from_rank(rank: i64) -> Option<AddressType> {
     let address_types = address_types();
     for a in address_types {
