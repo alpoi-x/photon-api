@@ -1,5 +1,10 @@
+const DEFAULT_HOST_ADDRESS: &'static str = "0.0.0.0";
+const DEFAULT_HOST_PORT: &'static str = "2322";
+const DEFAULT_POOL_SIZE: i8 = 50;
+
 #[derive(Clone)]
 pub struct ApiConfig {
+    pub pool_size: i8,
     pub host_address: String,
     pub host_port: String,
     pub elastic_api_key: String,
@@ -12,14 +17,12 @@ pub struct LanguageConfig {
 }
 
 pub fn load_api_config() -> ApiConfig {
-    let host_address = match std::env::var("HOST_ADDRESS") {
-        Ok(address) => address,
-        _ => "0.0.0.0".into(),
-    };
+    let host_address = std::env::var("HOST_ADDRESS").unwrap_or_else(|_| DEFAULT_HOST_ADDRESS.to_string());
+    let host_port = std::env::var("HOST_PORT").unwrap_or_else(|_| DEFAULT_HOST_PORT.to_string());
 
-    let host_port = match std::env::var("HOST_PORT") {
-        Ok(port) => port,
-        _ => "2322".into(),
+    let pool_size = match std::env::var("POOL_SIZE") {
+        Ok(pool_size) => pool_size.parse::<i8>().unwrap_or_else(|_| DEFAULT_POOL_SIZE),
+        _ => DEFAULT_POOL_SIZE
     };
 
     let elastic_api_key = match std::env::var("ELASTIC_API_KEY") {
@@ -33,6 +36,7 @@ pub fn load_api_config() -> ApiConfig {
     };
 
     return ApiConfig {
+        pool_size,
         host_address,
         host_port,
         elastic_api_key,

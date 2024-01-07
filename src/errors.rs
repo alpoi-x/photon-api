@@ -4,12 +4,15 @@ use std::error::Error;
 use std::fmt;
 use std::fmt::Debug;
 
+pub const POOL_ERROR_TEXT: &'static str = "Error retrieving a connection from the pool";
+
 type ElasticsearchError = elasticsearch::Error;
 
 #[derive(Debug)]
 pub enum PhotonError {
     Validation(ValidationError),
     Elasticsearch(ElasticsearchError),
+    Internal(String),
 }
 
 #[derive(Debug)]
@@ -32,10 +35,9 @@ impl IntoResponse for PhotonError {
                     // as they use different versions of http under the hood (true as of 04/01/24)
                     Some(code) => StatusCode::from_u16(code.as_u16()).unwrap(),
                     None => StatusCode::IM_A_TEAPOT,
-                },
-                err.to_string(),
-            )
-                .into_response(),
+                }, err.to_string(),
+            ).into_response(),
+            PhotonError::Internal(err) => (StatusCode::INTERNAL_SERVER_ERROR, err.to_string()).into_response()
         }
     }
 }
