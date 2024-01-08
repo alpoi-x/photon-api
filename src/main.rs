@@ -7,32 +7,32 @@ mod query;
 mod request;
 mod response;
 mod validation;
-mod connection;
 
 use crate::config::{load_api_config, load_language_config};
-use crate::errors::{PhotonError, POOL_ERROR_TEXT};
+use crate::errors::PhotonError;
 use crate::request::{PhotonLookupRequest, PhotonReverseRequest, PhotonSearchRequest};
 use crate::validation::{
     validate_bbox, validate_lang_parameter, validate_location_bias,
     validate_reverse_request_parameters, validate_search_request_parameters,
 };
-use crate::connection::{create_connection_pool, ElasticConnectionPool};
-use crate::elastic::{send_lookup, send_photon_query};
-use crate::query::build_reverse_query;
-use crate::response::PhotonResponse;
-
 use axum::extract::State;
 use axum::{routing::get, Router};
 use axum_extra::extract::Query;
 use axum_macros::debug_handler;
-use serde_json::Value;
+use elasticsearch::http::headers::{HeaderValue, AUTHORIZATION};
+use elasticsearch::http::transport::{CloudConnectionPool, TransportBuilder};
+use elasticsearch::Elasticsearch;
 use query::build_search_query;
+
+use crate::elastic::{send_lookup, send_photon_query};
+use crate::query::build_reverse_query;
+use crate::response::PhotonResponse;
 
 const DEFAULT: &'static str = "default";
 
 #[derive(Clone)]
 struct AppState {
-    pool: ElasticConnectionPool,
+    client: Elasticsearch,
     languages: Vec<String>,
 }
 
@@ -40,22 +40,14 @@ struct AppState {
 async fn main() {
     let config = load_api_config();
     let languages = load_language_config();
-    let pool = create_connection_pool(config.elastic_cloud_id, config.elastic_api_key, 30).unwrap();
 
-    let client = pool.get().await.unwrap();
-    let health_res= client
-        .cat()
-        .health()
-        .send()
-        .await
-        .unwrap()
-        .text()
-        .await
-        .unwrap();
-    
-    println!("Cluster health: {:#?}", health_res);
+    let client =
+        create_elasticsearch_client(&config.elastic_cloud_id, &config.elastic_api_key).unwrap();
 
-    let app_state = AppState { pool, languages };
+    let health_res = client.cat().health().send().await.unwrap().text().await.unwrap();
+    println!("{}", health_res);
+
+    let app_state = AppState { client, languages };
 
     let router = Router::new()
         .route("/health", get(health))
@@ -74,19 +66,30 @@ async fn main() {
     axum::serve(listener, router).await.unwrap();
 }
 
+fn create_elasticsearch_client(
+    cloud_id: &str,
+    api_key: &str,
+) -> Result<Elasticsearch, PhotonError> {
+    let mut api_key_header: HeaderValue =
+        HeaderValue::from_str(&format!("ApiKey {}", api_key)).unwrap();
+    api_key_header.set_sensitive(true);
+
+    // NB: we may want to implement our own connection pooling, as both
+    // SingleNodeConnectionPool and CloudConnectionPool use a single connection
+    let conn_pool = CloudConnectionPool::new(cloud_id)?;
+    let transport = TransportBuilder::new(conn_pool)
+        .header(AUTHORIZATION, api_key_header)
+        .build()
+        .unwrap();
+
+    return Ok(Elasticsearch::new(transport));
+}
+
 #[debug_handler]
 async fn health(State(app_state): State<AppState>) -> Result<String, PhotonError> {
-    return (&app_state)
-        .pool
-        .get()
-        .await.map_err(|_| PhotonError::Internal(POOL_ERROR_TEXT.into()))?
-        .cat()
-        .health()
-        .send()
-        .await.map_err(|err| PhotonError::Elasticsearch(err))?
-        .text()
-        .await.map_err(|err| PhotonError::Elasticsearch(err));
+    let response = app_state.client.cat().health().send().await?.text().await?;
 
+    Ok(response)
 }
 
 #[debug_handler]
@@ -135,9 +138,7 @@ async fn search(
         &location_bias,
     );
 
-    let client = &app_state.pool.get().await.map_err(|_| PhotonError::Internal(POOL_ERROR_TEXT.to_string()))?;
-
-    let mut result = send_photon_query(client, query, size, &language).await?;
+    let mut result = send_photon_query(&app_state.client, query, size, &language).await?;
 
     result = if result.features.is_empty() {
         lenient = true;
@@ -151,7 +152,7 @@ async fn search(
             &layer,
             &location_bias,
         );
-        send_photon_query(client, query, size, &language).await?
+        send_photon_query(&app_state.client, query, size, &language).await?
     } else {
         result
     };
@@ -193,8 +194,7 @@ async fn reverse(
         &osm_tag,
     );
 
-    let client = &app_state.pool.get().await.map_err(|_| PhotonError::Internal(POOL_ERROR_TEXT.to_string()))?;
-    let result = send_photon_query(client, query, size, &language).await?;
+    let result = send_photon_query(&app_state.client, query, size, &language).await?;
 
     return Ok(axum::Json::from(result));
 }
@@ -207,8 +207,8 @@ async fn lookup(
     validate_lang_parameter(&params.lang, &app_state.languages)?;
 
     let PhotonLookupRequest { place_id, lang } = params;
-    let language = lang.unwrap_or_else(|| DEFAULT.to_string());
-    let client = &app_state.pool.get().await.map_err(|_| PhotonError::Internal(POOL_ERROR_TEXT.to_string()))?;
 
-    return send_lookup(client, &place_id, &language).await;
+    let language = lang.unwrap_or_else(|| DEFAULT.to_string());
+
+    return send_lookup(&app_state.client, &place_id, &language).await;
 }
